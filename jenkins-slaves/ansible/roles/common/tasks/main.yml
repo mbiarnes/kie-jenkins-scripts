@@ -90,8 +90,9 @@
     src: /tmp/downloads/jdk-{{ item }}-linux-x64.tar.gz
     dest: /opt/tools
     copy: no
-    # owner: root
-    # group: root
+    owner: root
+    group: root
+    mode: 0777
   with_items:
    - "{{ jdk_short_versions }}"
 
