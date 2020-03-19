@@ -85,6 +85,13 @@
   with_items:
     - "{{ jdk_download_urls }}"
 
+- name: Create JDK dirs to extract the archives into (because of permissions)
+  file:
+    path: /opt/tools/{{ item }}
+    state: directory
+  with_items:
+    - "{{ jdk_long_versions }}"
+
 - name: Extract JDK archives
   unarchive:
     src: /tmp/downloads/jdk-{{ item }}-linux-x64.tar.gz
@@ -116,6 +123,13 @@
     group: root
   with_items:
    - "{{ maven_versions }}"
+
+- name: Create Maven dirs to extract the archives into (because of permissions)
+  file:
+    path: /opt/tools/apache-maven-{{ item }}
+    state: directory
+  with_items:
+    - "{{ maven_versions }}"
 
 - name: Extract Maven archives
   unarchive: copy=no src=/tmp/downloads/apache-maven-{{ item }}-bin.tar.gz dest=/opt/tools owner=root group=root
