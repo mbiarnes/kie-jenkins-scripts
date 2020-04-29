@@ -49,13 +49,13 @@ dependencies {
     testCompile 'org.jenkins-ci.plugins:structs:1.13@jar'
     testCompile "org.jenkins-ci.plugins:config-file-provider:2.15.7@jar"
     testCompile 'org.jenkins-ci.plugins:credentials:2.1.13@jar'
-    testCompile 'org.jenkins-ci.plugins:cloudbees-folder:5.12@jar'
+    testCompile 'org.jenkins-ci.plugins:cloudbees-folder:5.16@jar'
     testCompile 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.5@jar'
 
     // plugins to install in test instance (all plugins used by the DSL scripts needs to be specified)
     // keep the alphabetical order
     testPlugins 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.5'
-    testPlugins 'org.jenkins-ci.plugins:cloudbees-folder:5.12'
+    testPlugins 'org.jenkins-ci.plugins:cloudbees-folder:5.16'
     testPlugins 'com.cloudbees.plugins:build-flow-plugin:0.20'
     testPlugins 'com.coravy.hudson.plugins.github:github:1.19.0'
     testPlugins 'com.sonyericsson.hudson.plugins.rebuild:rebuild:1.25'
@@ -125,7 +125,7 @@ task rest(dependsOn: 'classes', type: JavaExec) {
     systemProperties System.getProperties()
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.4.1'
+task wrapperTask(type: Wrapper) {
+    gradleVersion = '6.3'
     distributionType = 'all'
 }
