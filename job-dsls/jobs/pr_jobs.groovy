@@ -156,6 +156,12 @@ for (repoConfig in REPO_CONFIGS) {
                 description("")
                 trim(false)
             }
+            stringParam {
+                name("ADDITIONAL_ARTIFACTS_TO_ARCHIVE")
+                defaultValue("${get('artifactsToArchive')}")
+                description('')
+                trim(false)
+            }
         }
 
         definition {
