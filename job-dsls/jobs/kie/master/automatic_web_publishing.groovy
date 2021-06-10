@@ -12,16 +12,26 @@ def folderPath="KIE/master/webs"
 
 def javadk=Constants.JDK_VERSION
 def mvnVersion="kie-maven-" + Constants.MAVEN_VERSION
+def mainBranch=Constants.BRANCH
 def AGENT_LABEL="kie-rhel7 && kie-mem4g"
 
 def final DEFAULTS = [
         repository : "drools",
-        mailRecip : "mbiarnes@redhat.com"
+        mailRecip : "jporter@redhat.com"
 ]
 
 def final REPO_CONFIGS = [
-        "drools"    : [],
-        "jbpm"      : [repository : "jbpm"]
+        "drools"      : [],
+        "jbpm"        : [
+                repository : "jbpm"
+        ],
+        "optaplanner" : [
+                mailRecip:  DEFAULTS["mailRecip"] + ",gdsmet@redhat.com",
+                repository: "optaplanner"
+        ],
+        "kiegroup"    : [
+                repository: "kiegroup"
+        ]
 ]
 
 for (reps in REPO_CONFIGS) {
@@ -46,7 +56,7 @@ for (reps in REPO_CONFIGS) {
             }
             stage ('checkout website') {
                 steps {
-                    checkout([\$class: 'GitSCM', branches: [[name: 'master']], browser: [\$class: 'GithubWeb', repoUrl: 'https://github.com/kiegroup/${repo}-website'], doGenerateSubmoduleConfigurations: false, extensions: [[\$class: 'RelativeTargetDirectory', relativeTargetDir: '${repo}-website']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'kie-ci-user-key', url: 'https://github.com/kiegroup/${repo}-website']]])
+                    checkout([\$class: 'GitSCM', branches: [[name: $mainBranch ]], browser: [\$class: 'GithubWeb', repoUrl: 'https://github.com/kiegroup/${repo}-website'], doGenerateSubmoduleConfigurations: false, extensions: [[\$class: 'RelativeTargetDirectory', relativeTargetDir: '${repo}-website']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'kie-ci-user-key', url: 'https://github.com/kiegroup/${repo}-website']]])
                     dir("\${WORKSPACE}" + '/${repo}-website') {
                         sh '''pwd  
                            ls -al
@@ -56,47 +66,22 @@ for (reps in REPO_CONFIGS) {
                     }
                 }
             }
-            stage('remove docker image kiegroup/${repo}-website if it exists') {
+            stage('Build website') {
                 steps {
-                    dir("\${WORKSPACE}" + '/${repo}-website') {
-                        sh '''#!/bin/bash -e 
-                           isImage=\$(docker images -q kiegroup/${repo}-website)
-                           echo "Image: \$isImage"
-                           if [ "\$isImage" != "" ]; then
-                               docker rmi kiegroup/${repo}-website
-                           fi
-                           '''
+                    dir("${WORKSPACE}" + '/${repo}-website') {
+                        sh 'mvn clean generate-resources'   
                     }
                 }
             }
-            stage('create directory that stores key files'){
-                steps{
-                    withCredentials([sshUserPrivateKey(credentialsId: 'filemgmt-host', keyFileVariable: 'KNOWN_HOSTS')]) {
-                        dir("\${WORKSPACE}") {
-                            sh '''# create dir where key files are stored 
-                               mkdir keys
-                               cp \$KNOWN_HOSTS \$WORKSPACE/keys/known_hosts
-                               chmod 644 \$WORKSPACE/keys/known_hosts
-                               '''
-                        }
-                    }
-                }
-            }
-            stage('build docker container') {
+            stage('Publish website to filemgmt.jboss.org') {
                 steps {
-                    withCredentials([sshUserPrivateKey(credentialsId: '${repo}-filemgmt', keyFileVariable: 'FILEMGMT_KEY')]) {
-                        dir("\${WORKSPACE}" + '/${repo}-website') {
-                            sh '''cp \$FILEMGMT_KEY \$WORKSPACE/keys/id_rsa
-                               chmod 600 \$WORKSPACE/keys/id_rsa
-                               ls -l \$WORKSPACE/keys/id_rsa
-                               docker images
-                               docker build -t kiegroup/${repo}-website:latest _dockerPublisher
-                               docker run --cap-add net_raw --cap-add net_admin -i --rm --volume "\${WORKSPACE}"/keys/:/home/jenkins/.ssh/:Z --name ${repo}-container kiegroup/${repo}-website:latest bash -l -c 'echo "INSIDE THE CONTAINER" && echo "WHOAMI" && whoami && echo "PWD" && pwd && ls -al && echo "inside .ssh" && cd /home/jenkins/.ssh && ls -al && cd /home/jenkins/${repo}-website-master && sudo rake setup && rake clean build && rake publish'
-                               '''
-                        }
+                    dir("${WORKSPACE}" + '/${repo}-website') {
+                        sshagent(["${repo}-filemgmt"]) {
+                            sh './build/rsync_website.sh'
+                        }    
                     }
                 }
-            }
+            }              
         }
         post {
             failure{
