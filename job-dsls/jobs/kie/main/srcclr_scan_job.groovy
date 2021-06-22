@@ -59,7 +59,7 @@ for (repo in repoList) {
                     name('origin')
                     url('$SRCCLR_INVOKER_REPO_URL')
                 }
-                branch('master')
+                branch('main')
             }
         }
 

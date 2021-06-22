@@ -63,13 +63,13 @@ for (repoConfig in REPO_CONFIGS) {
 
     // Creation of folders where jobs are stored
     folder("KIE")
-    folder("KIE/master")
-    folder("KIE/master/" + Constants.DEPLOY_FOLDER)
+    folder("KIE/main")
+    folder("KIE/main/" + Constants.DEPLOY_FOLDER)
 
-    def folderPath = ("KIE/master/" + Constants.DEPLOY_FOLDER)
+    def folderPath = ("KIE/main/" + Constants.DEPLOY_FOLDER)
 
-    // jobs for master branch don't use the branch in the name
-    String jobName = (repoBranch == "master") ? "${folderPath}/$repo" : "${folderPath}/$repo-$repoBranch"
+    // jobs for main branch don't use the branch in the name
+    String jobName = (repoBranch == "main") ? "${folderPath}/$repo" : "${folderPath}/$repo-$repoBranch"
 
     job(jobName) {
 
